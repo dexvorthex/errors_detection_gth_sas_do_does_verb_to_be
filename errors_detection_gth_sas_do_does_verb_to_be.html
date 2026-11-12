@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GTH SAS • Error Detective: Spotlight on Workplace English</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            corporate: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            },
+            sena: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+      50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.7); }
+    }
+    @keyframes greenGlow {
+      0%, 100% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+      50% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.7); }
+    }
+    .error-glow {
+      animation: pulseGlow 2s infinite;
+    }
+    .success-glow {
+      animation: greenGlow 2s infinite;
+    }
+    .token-word {
+      transition: all 0.2s ease;
+      cursor: pointer;
+      display: inline-block;
+      padding: 2px 6px;
+      margin: 2px;
+      border-radius: 6px;
+    }
+    .token-word:hover {
+      background-color: #f1f5f9;
+      transform: translateY(-2px);
+    }
+    /* Hide scrollbars but allow scrolling */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-blue-500 selection:text-white">
+
+  <!-- TOP APP BAR -->
+  <header class="bg-slate-800/95 border-b border-slate-700/80 backdrop-blur sticky top-0 z-50 px-4 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand & Title -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-blue-500/20 text-white font-extrabold text-lg">
+          🔍
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">GTH SAS</span>
+            <span class="text-xs font-semibold text-slate-400">27 Trainees • Level A2</span>
+            <span id="header-student-badge" class="hidden text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">👤 <span id="header-student-name"></span></span>
+          </div>
+          <h1 class="text-base sm:text-lg font-bold text-white tracking-tight leading-snug">
+            The Error Detective <span class="text-emerald-400 font-normal">| Spot the Error</span>
+            <span class="text-slate-400 font-normal text-xs sm:text-sm block sm:inline"> (El Detective de Errores | Detecta el Error)</span>
+          </h1>
+        </div>
+      </div>
+
+      <!-- Live Counters & Stats -->
+      <div class="flex items-center flex-wrap gap-2 text-xs sm:text-sm">
+        <div class="bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-1.5 flex items-center space-x-2">
+          <span class="text-slate-400">Score:</span>
+          <span id="score-counter" class="font-bold text-amber-400 font-mono text-sm sm:text-base">0 / 200</span>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-700 rounded-lg px-2.5 py-1.5 flex items-center space-x-2">
+          <span class="text-emerald-400 font-bold">✅ <span id="correct-counter">0</span></span>
+          <span class="text-slate-600">|</span>
+          <span class="text-rose-400 font-bold">❌ <span id="incorrect-counter">0</span></span>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-700 rounded-lg px-2.5 py-1.5 hidden sm:flex items-center space-x-1.5 text-amber-400">
+          <span>🔥</span>
+          <span id="streak-counter" class="font-bold font-mono">0</span>
+          <span class="text-slate-400 text-xs">streak</span>
+        </div>
+
+        <!-- Controls: Voice, Sound, Speech, Fullscreen, Teacher Notes -->
+        <select id="voice-select" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 max-w-[140px] truncate hidden sm:block" title="Select English Voice">
+          <option value="">Auto Natural Voice</option>
+        </select>
+        <button id="btn-sound" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition" title="Activar/Desactivar Efectos de Sonido">
+          <span id="sound-icon">🔔</span>
+        </button>
+        <button id="btn-teacher-notes" class="px-2.5 py-1.5 rounded-lg bg-indigo-900/40 hover:bg-indigo-900/70 border border-indigo-700/50 text-indigo-300 text-xs font-medium flex items-center space-x-1 transition" title="Guía del Profesor con Consejos">
+          <span>💡</span>
+          <span class="hidden md:inline">Teacher Tips</span>
+        </button>
+        <button id="btn-drawer" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition" title="Ver Lista de Oraciones">
+          <span>📑</span>
+        </button>
+        <button id="btn-fullscreen" class="p-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium transition shadow-md shadow-blue-600/30" title="Modo Pantalla Completa para Proyector">
+          <span id="fullscreen-icon">⛶</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Category Filters & Mini Progress -->
+    <div class="max-w-7xl mx-auto mt-2 pt-2 border-t border-slate-700/60 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
+        <span class="text-slate-400 mr-1 hidden sm:inline">Filter:</span>
+        <button id="filter-all" class="filter-btn px-2.5 py-1 rounded-md font-semibold bg-blue-600 text-white transition">All (20)</button>
+        <button id="filter-do-does" class="filter-btn px-2.5 py-1 rounded-md font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition">Do vs Does (10)</button>
+        <button id="filter-to-be" class="filter-btn px-2.5 py-1 rounded-md font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition">Verb To Be (10)</button>
+      </div>
+      <div class="flex items-center space-x-2 text-xs text-slate-400">
+        <span id="slide-indicator" class="font-mono font-bold text-slate-200">Sentence 1 of 20</span>
+        <div class="w-24 sm:w-36 h-2 bg-slate-700 rounded-full overflow-hidden">
+          <div id="progress-bar-fill" class="h-full bg-gradient-to-r from-blue-500 to-emerald-400 w-1/12 transition-all duration-300"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN PRESENTATION AREA -->
+  <main class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 md:p-8 flex flex-col justify-center">
+
+        <!-- WELCOME / NAME ENTRY CARD -->
+    <div id="welcome-card" class="bg-slate-800/90 border border-slate-700/90 rounded-2xl shadow-2xl p-6 sm:p-10 max-w-xl w-full mx-auto relative overflow-hidden">
+      <div class="absolute -top-24 -right-24 w-64 h-64 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-600/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="relative z-10 text-center space-y-5">
+        <div class="inline-flex w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-500 items-center justify-center text-3xl shadow-xl shadow-blue-500/20">
+          🔍
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">GTH SAS • Workplace English A2</span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-3">
+            The Error Detective
+            <span class="block text-base sm:text-xl font-bold text-emerald-400 mt-1">Spot the Error / Detecta el Error</span>
+          </h2>
+          <p class="text-sm text-slate-300 mt-1.5">Enter your full name to start and generate your personalized final report.<br><span class="text-slate-400 italic text-xs">(Ingresa tu nombre completo para iniciar y generar tu reporte final.)</span></p>
+        </div>
+        <div class="text-left space-y-2 pt-2">
+          <label for="student-name-input" class="block text-xs font-bold uppercase tracking-wider text-emerald-400">Full Name / Nombre Completo *</label>
+          <input id="student-name-input" type="text" placeholder="Ej. María Juliana Gálviz" class="w-full px-4 py-3.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 text-white placeholder-slate-500 outline-none text-base transition" autocomplete="name">
+          <p id="name-error-msg" class="hidden text-xs text-rose-400 font-semibold">⚠️ Please enter your full name / Por favor escribe tu nombre completo.</p>
+        </div>
+        <div class="bg-blue-950/40 border border-blue-500/30 rounded-xl p-3 text-left text-xs text-blue-200 flex items-start space-x-2.5">
+          <span class="text-base mt-0.5">🔊</span>
+          <div>
+            <span class="font-bold text-blue-300">Audio &amp; Voices / Audio y Voces:</span>
+            You can listen to every sentence with <strong>🔊 Listen</strong> and choose a natural voice (✨) in the top bar.
+            <span class="block text-slate-400 italic mt-0.5">Puedes escuchar la pronunciación de cada frase y escoger la voz que prefieras en la barra superior.</span>
+          </div>
+        </div>
+        <button id="btn-start-activity" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-extrabold text-base shadow-lg shadow-blue-600/30 transition transform hover:-translate-y-0.5 flex items-center justify-center space-x-2">
+          <span>Start Activity / Comenzar</span>
+          <span>→</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- SLIDE VIEW CONTAINER -->
+    <div id="slide-card" class="hidden bg-slate-800/90 border border-slate-700/90 rounded-2xl shadow-2xl p-6 sm:p-8 md:p-10 relative overflow-hidden transition-all duration-300">
+      
+      <!-- Ambient Glow Behind Card -->
+      <div class="absolute -top-24 -right-24 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Slide Meta & Badges -->
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-6 relative z-10">
+        <div class="flex flex-wrap items-center gap-2">
+          <span id="badge-category" class="px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30">
+            Do vs Does
+          </span>
+          <span id="badge-dept" class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-700/80 text-slate-200 border border-slate-600">
+            🏢 Nómina
+          </span>
+        </div>
+
+      </div>
+
+      <!-- Instruction Prompt -->
+      <div class="mb-4 text-center sm:text-left relative z-10">
+        <p class="text-xs sm:text-sm font-semibold uppercase tracking-wider text-emerald-400 flex items-center justify-center sm:justify-start gap-1.5">
+          <span>🎯</span> <span id="prompt-instruction">
+            Analyze the workplace sentence: Does it have a grammar error or is it correct?
+            <span class="text-slate-300 font-normal block sm:inline"> / Analiza la oración laboral: ¿Contiene algún error gramatical o está correcta?</span>
+          </span>
+        </p>
+      </div>
+
+      <!-- Big Sentence Display Area -->
+      <div class="bg-slate-900/90 border border-slate-700/80 rounded-xl p-6 sm:p-8 text-center my-4 relative z-10 shadow-inner">
+        
+        <!-- Audio speaker & speed controls inside sentence card -->
+        <div class="absolute top-3 right-3 flex items-center space-x-1.5">
+          <button id="btn-speed-toggle" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition text-xs font-semibold border border-slate-700" title="Toggle audio speed: Normal (1.0x) / Slow A2 (0.75x)">
+            ⚡ <span id="speed-label">1.0x</span>
+          </button>
+          <button id="btn-speak-sentence" class="p-2 rounded-lg bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white transition text-sm flex items-center space-x-1 border border-blue-500/40" title="Listen to natural English pronunciation">
+            <span>🔊</span>
+            <span class="text-xs font-bold hidden sm:inline">Listen</span>
+          </button>
+        </div>
+
+        <div id="sentence-container" class="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-wide leading-relaxed py-2">
+          <!-- Populated dynamically with interactive token words -->
+        </div>
+
+        <p id="spanish-hint" class="text-xs sm:text-sm text-slate-400 italic mt-2">
+          <!-- Spanish translation hint -->
+        </p>
+        <p class="text-[11px] sm:text-xs text-blue-300/80 mt-3 pt-2.5 border-t border-slate-800/80">
+          🔊 Click <strong>Listen</strong> to hear the pronunciation and choose a voice (✨) in the top bar <span class="text-slate-400">/ Oye la pronunciación y escoge tu voz en la barra superior.</span>
+        </p>
+      </div>
+
+      <!-- Interactive Decision Buttons (Error vs Acierto) -->
+      <div id="action-buttons-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-6 relative z-10">
+        <button id="btn-choose-error" class="group relative overflow-hidden p-5 rounded-xl bg-gradient-to-br from-rose-950/40 via-rose-900/20 to-slate-900 border-2 border-rose-500/40 hover:border-rose-400 hover:from-rose-900/40 hover:to-slate-900 text-left transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-rose-950/20">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-2xl font-black group-hover:scale-110 transition border border-rose-500/30">
+              ❌
+            </div>
+            <div>
+              <div class="text-base sm:text-lg font-black text-rose-300 tracking-wide uppercase">Has an Error / Tiene Error</div>
+              <div class="text-xs text-rose-200/70 font-medium">Grammar mistake (press 1)</div>
+            </div>
+          </div>
+        </button>
+
+        <button id="btn-choose-correct" class="group relative overflow-hidden p-5 rounded-xl bg-gradient-to-br from-emerald-950/40 via-emerald-900/20 to-slate-900 border-2 border-emerald-500/40 hover:border-emerald-400 hover:from-emerald-900/40 hover:to-slate-900 text-left transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-emerald-950/20">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl font-black group-hover:scale-110 transition border border-emerald-500/30">
+              ✅
+            </div>
+            <div>
+              <div class="text-base sm:text-lg font-black text-emerald-300 tracking-wide uppercase">Correct / Está Correcta</div>
+              <div class="text-xs text-emerald-200/70 font-medium">No mistakes (press 2)</div>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <!-- FEEDBACK REVEAL SECTION (Hidden until answered) -->
+      <div id="feedback-panel" class="hidden relative z-10 transition-all duration-500 space-y-4 pt-2">
+        
+        <!-- Feedback Banner: Did user guess right? -->
+        <div id="feedback-banner" class="p-4 rounded-xl flex items-center justify-between border">
+          <div class="flex items-center space-x-3">
+            <span id="feedback-emoji" class="text-3xl">🎉</span>
+            <div>
+              <h3 id="feedback-verdict-title" class="font-extrabold text-base sm:text-lg">¡Excelente Deducción!</h3>
+              <p id="feedback-verdict-sub" class="text-xs sm:text-sm text-slate-300">Identificaste correctamente el estado de la oración.</p>
+            </div>
+          </div>
+          <div id="feedback-points-badge" class="px-3 py-1.5 rounded-lg font-mono font-bold text-sm bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            +10 pts
+          </div>
+        </div>
+
+        <!-- Comparative Correction Box -->
+        <div class="bg-slate-900/90 border border-slate-700 rounded-xl p-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <!-- Diagnosis / Comparison -->
+            <div class="space-y-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Grammar Diagnosis:</span>
+              <div id="visual-breakdown" class="space-y-1.5 text-sm">
+                <!-- Injected via JS: Original vs Corrected with strike and highlight -->
+              </div>
+            </div>
+
+            <!-- Audio button for corrected sentence -->
+            <div class="flex flex-col justify-between bg-slate-800/80 rounded-lg p-3.5 border border-slate-700/60">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-blue-400">Correct Pronunciation:</span>
+                <p id="corrected-sentence-preview" class="text-sm font-semibold text-white mt-1">
+                  <!-- Injected via JS -->
+                </p>
+              </div>
+              <button id="btn-speak-corrected" class="mt-3 w-full py-2 px-3 rounded-lg bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 text-xs font-semibold flex items-center justify-center space-x-2 transition">
+                <span>🔊</span>
+                <span>Listen to Correct Sentence</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Golden Rule Card -->
+        <div class="bg-gradient-to-r from-amber-950/30 via-slate-900 to-slate-900 border border-amber-500/30 rounded-xl p-4 sm:p-5">
+          <div class="flex items-start space-x-3">
+            <span class="text-2xl mt-0.5">💡</span>
+            <div class="flex-1">
+              <h4 class="text-xs sm:text-sm font-bold uppercase tracking-wider text-amber-400">Golden Grammar Rule / Regla de Oro:</h4>
+              <p id="golden-rule-text" class="text-sm sm:text-base text-slate-200 mt-1 leading-relaxed">
+                <!-- Golden rule injected here -->
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teacher's Note Card (Collapsible) -->
+        <div id="teacher-note-card" class="bg-indigo-950/30 border border-indigo-500/30 rounded-xl p-4 hidden">
+          <div class="flex items-start space-x-3">
+            <span class="text-xl mt-0.5">🎓</span>
+            <div>
+              <h5 class="text-xs font-bold uppercase tracking-wider text-indigo-300">Teacher Tip:</h5>
+              <p id="teacher-note-text" class="text-xs sm:text-sm text-indigo-200/90 mt-1">
+                <!-- Teacher tip -->
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SLIDE FOOTER NAVIGATION -->
+      <div class="mt-8 pt-5 border-t border-slate-700/80 flex flex-wrap items-center justify-between gap-3 relative z-10">
+        <button id="btn-prev-slide" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-sm font-semibold flex items-center space-x-1.5 transition disabled:opacity-40 disabled:cursor-not-allowed">
+          <span>←</span>
+          <span>Previous</span>
+        </button>
+
+        <div class="flex items-center space-x-2">
+          <button id="btn-reset-current" class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 text-xs font-medium transition" title="Volver a intentar esta oración">
+            <span>🔄 Retry</span>
+          </button>
+        </div>
+
+        <button id="btn-next-slide" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-bold flex items-center space-x-2 transition shadow-lg shadow-blue-600/30">
+          <span id="next-btn-text">Next Sentence</span>
+          <span>→</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- SUMMARY / DASHBOARD VIEW (Shown on completion or via drawer) -->
+    <div id="summary-card" class="hidden bg-slate-800/90 border border-slate-700/90 rounded-2xl shadow-2xl p-6 sm:p-8 md:p-10 relative overflow-hidden transition-all duration-300">
+      
+      <!-- Ambient Glow -->
+      <div class="absolute -top-24 -right-24 w-72 h-72 bg-amber-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Header -->
+      <div class="text-center max-w-xl mx-auto space-y-2 mb-8">
+        <div class="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 font-black text-3xl shadow-xl shadow-amber-500/20">
+          🏆
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Consolidated Report</h2>
+        <div class="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-blue-500/20 border border-blue-500/40 text-blue-200 text-sm font-bold mt-2">
+          <span>👤 Trainee:</span>
+          <span id="summary-student-name" class="text-white">Guest Trainee</span>
+        </div>
+        <p class="text-xs sm:text-sm text-slate-400 pt-1">Grammar detection session results • GTH SAS (Level A2).</p>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div class="bg-slate-900/80 border border-slate-700 rounded-xl p-4 text-center">
+          <div class="text-xs font-medium text-slate-400 uppercase tracking-wider">Final Score</div>
+          <div id="summary-final-score" class="text-2xl sm:text-3xl font-black text-amber-400 font-mono mt-1">0 / 200</div>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-700 rounded-xl p-4 text-center">
+          <div class="text-xs font-medium text-slate-400 uppercase tracking-wider">Accuracy</div>
+          <div id="summary-accuracy" class="text-2xl sm:text-3xl font-black text-blue-400 font-mono mt-1">0%</div>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-700 rounded-xl p-4 text-center">
+          <div class="text-xs font-medium text-slate-400 uppercase tracking-wider">Correct ✅</div>
+          <div id="summary-correct" class="text-2xl sm:text-3xl font-black text-emerald-400 font-mono mt-1">0</div>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-700 rounded-xl p-4 text-center">
+          <div class="text-xs font-medium text-slate-400 uppercase tracking-wider">Errors ❌</div>
+          <div id="summary-incorrect" class="text-2xl sm:text-3xl font-black text-rose-400 font-mono mt-1">0</div>
+        </div>
+      </div>
+
+      <!-- Rank Badge Banner -->
+      <div id="summary-badge-banner" class="p-4 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-950/30 to-slate-900 mb-8 flex items-center space-x-4">
+        <div id="summary-badge-icon" class="text-4xl">🥇</div>
+        <div>
+          <h3 id="summary-badge-title" class="text-lg font-bold text-amber-300">Master Detective de Talento Humano</h3>
+          <p id="summary-badge-desc" class="text-xs sm:text-sm text-slate-300">¡Dominio sobresaliente de las reglas de Do/Does y el verbo To Be!</p>
+        </div>
+      </div>
+
+      <!-- Complete Review Table -->
+      <div class="mb-8">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-2">
+          <span>📋</span> Sentence Breakdown & Key Rules:
+        </h3>
+        <div class="overflow-x-auto rounded-xl border border-slate-700">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-900/90 text-slate-400 border-b border-slate-700 uppercase font-semibold">
+              <tr>
+                <th class="py-3 px-3">#</th>
+                <th class="py-3 px-3">Topic</th>
+                <th class="py-3 px-3">Sentence</th>
+                <th class="py-3 px-3 text-center">Status</th>
+                <th class="py-3 px-3">Correction / Key</th>
+                <th class="py-3 px-3 text-center">Your Answer</th>
+              </tr>
+            </thead>
+            <tbody id="summary-table-body" class="divide-y divide-slate-800 bg-slate-900/40">
+              <!-- Injected dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-700">
+        <button id="btn-restart-all" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-semibold flex items-center space-x-2 transition">
+          <span>🔄</span>
+          <span>Restart Activity</span>
+        </button>
+        <div class="flex items-center space-x-2">
+          <button id="btn-print-report" class="px-4 py-2.5 rounded-xl bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 text-sm font-semibold flex items-center space-x-1.5 transition">
+            <span>🖨️</span>
+            <span>Print Report</span>
+          </button>
+          <button id="btn-return-slides" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-bold transition shadow-lg shadow-blue-600/30">
+            <span>Back to Slides</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- SLIDE JUMPER DRAWER / MODAL -->
+  <div id="drawer-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="p-4 border-b border-slate-700 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">📑</span>
+          <h3 class="font-bold text-white text-base">Slide Index</h3>
+        </div>
+        <button id="btn-close-drawer" class="text-slate-400 hover:text-white p-1 rounded-lg">✕</button>
+      </div>
+      <div id="drawer-list" class="p-4 overflow-y-auto space-y-2 flex-1">
+        <!-- Injected dynamically -->
+      </div>
+      <div class="p-3 border-t border-slate-700 bg-slate-900/60 flex justify-end">
+        <button id="btn-view-summary-direct" class="px-4 py-2 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold hover:bg-amber-500/30 transition">
+          View Final Report 🏆
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-800 border border-slate-700 shadow-xl rounded-xl px-4 py-3 text-sm text-white transform transition-all duration-300 translate-y-20 opacity-0 pointer-events-none flex items-center space-x-2">
+    <span id="toast-icon">✨</span>
+    <span id="toast-message">Notificación</span>
+  </div>
+
+  <!-- SCRIPTS & APPLICATION LOGIC -->
+  <script>
+    // 12 Carefully authored workplace sentences for GTH SAS A2
+    const sentencesData = [
+      {
+        id: 1,
+        category: "Do vs Does",
+        department: "🏢 Human Resources • Recruitment (Talento Humano • Reclutamiento)",
+        protagonist: "Karen Vanessa Cordillo (Analista TH)",
+        sentence: "Does Karen works in the Human Resources department?",
+        hasError: true,
+        faultyTokenIndex: 2, // "works"
+        faultyWord: "works",
+        correctWord: "work",
+        correctSentence: "Does Karen work in the Human Resources department?",
+        goldenRule: "Regla del 'Ladrón de la S': En preguntas con 'Does', el auxiliar ya contiene la tercera persona. Por eso, el verbo principal SIEMPRE va en su forma base (work, nunca works).",
+        spanishTranslation: "¿Trabaja Karen en el departamento de Talento Humano?",
+        teacherTip: "Pregunta al salón: 'Si ya usamos Does, ¿qué le pasa a la S del verbo?'. Recuerda la metáfora del ladrón: Does se roba la S."
+      },
+      {
+        id: 2,
+        category: "Verb To Be • Past",
+        department: "💼 Payroll Area (Área de Nómina)",
+        protagonist: "Andrés Felipe & Kelly Yuliana",
+        sentence: "Yesterday, Andrés and Kelly was in the Payroll office.",
+        hasError: true,
+        faultyTokenIndex: 4, // "was"
+        faultyWord: "was",
+        correctWord: "were",
+        correctSentence: "Yesterday, Andrés and Kelly were in the Payroll office.",
+        goldenRule: "Concordancia de Plural en Pasado: Andrés y Kelly son dos personas (They / Ellos). Con 'They, We, You' siempre se utiliza 'were'. 'Was' se reserva para 'I, He, She, It'.",
+        spanishTranslation: "Ayer, Andrés y Kelly estaban en la oficina de Nómina.",
+        teacherTip: "Pide que cuenten los sujetos antes del verbo: ¿Una persona o dos? Al ser dos, es plural (were)."
+      },
+      {
+        id: 3,
+        category: "Do vs Does",
+        department: "🌱 Training & Well-being (Capacitación y Bienestar)",
+        protagonist: "Aprendices GTH SAS",
+        sentence: "Do the trainees check the attendance list every morning?",
+        hasError: false,
+        faultyTokenIndex: -1,
+        faultyWord: null,
+        correctWord: null,
+        correctSentence: "Do the trainees check the attendance list every morning?",
+        goldenRule: "¡Oración Impecable! El sujeto 'the trainees' es plural (They). Por tanto, el auxiliar correcto es 'Do' y el verbo principal 'check' está en su forma base.",
+        spanishTranslation: "¿Revisan los aprendices la lista de asistencia todas las mañanas?",
+        teacherTip: "Resalta que la palabra 'trainees' termina en 's' porque es plural, y por eso pide el auxiliar 'Do'."
+      },
+      {
+        id: 4,
+        category: "Verb To Be • Future",
+        department: "🛡️ Occupational Health & Safety • OHS (SST)",
+        protagonist: "Estefanía Arboleda (Auxiliar SST)",
+        sentence: "In two years, Estefanía will is the OHS Safety Director.",
+        hasError: true,
+        faultyTokenIndex: 5, // "is"
+        faultyWord: "is",
+        correctWord: "be",
+        correctSentence: "In two years, Estefanía will be the OHS Safety Director.",
+        goldenRule: "Estructura de Futuro con 'Will': Después de 'will', el verbo To Be SIEMPRE debe quedar en su forma infinitiva base: 'will be'. Jamás se conjuga como 'will is' o 'will are'.",
+        spanishTranslation: "En dos años, Estefanía será la Directora de Seguridad y Salud en el Trabajo.",
+        teacherTip: "'Will' es la forma más sencilla en inglés porque nunca cambia: I will be, She will be, They will be."
+      },
+      {
+        id: 5,
+        category: "Do vs Does",
+        department: "📚 Training & Development (Capacitación y Formación)",
+        protagonist: "Jhonatan David Marín (Auxiliar Capacitación)",
+        sentence: "Jhonatan doesn't needs additional training materials today.",
+        hasError: true,
+        faultyTokenIndex: 2, // "needs"
+        faultyWord: "needs",
+        correctWord: "need",
+        correctSentence: "Jhonatan doesn't need additional training materials today.",
+        goldenRule: "Negación en Presente Simple: En oraciones negativas con 'doesn't', el auxiliar ya absorbe la tercera persona. El verbo principal debe quedar en forma simple: 'need', no 'needs'.",
+        spanishTranslation: "Jhonatan no necesita materiales adicionales de capacitación hoy.",
+        teacherTip: "Uno de los errores más comunes en aprendices A2 es duplicar la S: 'doesn't + needs'. Pídeles que tachen la S."
+      },
+      {
+        id: 6,
+        category: "Verb To Be • Present",
+        department: "🏛️ General Management (Gerencia General)",
+        protagonist: "Nathalia Tobón (CEO • Gerente General)",
+        sentence: "Nathalia is the Chief Executive Officer of our company.",
+        hasError: false,
+        faultyTokenIndex: -1,
+        faultyWord: null,
+        correctWord: null,
+        correctSentence: "Nathalia is the Chief Executive Officer of our company.",
+        goldenRule: "¡Oración Impecable! El sujeto es tercera persona singular femenina (She = Nathalia), por lo que le corresponde la forma 'is' en presente simple.",
+        spanishTranslation: "Nathalia es la Directora Ejecutiva (CEO) de nuestra empresa.",
+        teacherTip: "Aprovecha para reforzar el término corporativo internacional: CEO = Chief Executive Officer."
+      },
+      {
+        id: 7,
+        category: "Verb To Be • Past",
+        department: "🤝 Induction & Selection (Inducción y Selección)",
+        protagonist: "María Juliana Gálviz (Auxiliar Reclutamiento)",
+        sentence: "Last week, I were responsible for the induction workshop.",
+        hasError: true,
+        faultyTokenIndex: 3, // "were"
+        faultyWord: "were",
+        correctWord: "was",
+        correctSentence: "Last week, I was responsible for the induction workshop.",
+        goldenRule: "Pasado de Primera Persona Singular: Con el pronombre 'I' (yo), la forma correcta en pasado simple del verbo To Be es 'was' (I was). 'Were' se reserva para 'you, we, they'.",
+        spanishTranslation: "La semana pasada, yo fui responsable del taller de inducción.",
+        teacherTip: "Haz que los aprendices repitan la secuencia de memorización: 'I was, He was, She was, It was'."
+      },
+      {
+        id: 8,
+        category: "Do vs Does",
+        department: "📂 Document Management & Archive (Gestión Documental)",
+        protagonist: "Angélica Manso & Kimberly Barbosa",
+        sentence: "Does you have the signed contracts for the new employees?",
+        hasError: true,
+        faultyTokenIndex: 0, // "Does"
+        faultyWord: "Does",
+        correctWord: "Do",
+        correctSentence: "Do you have the signed contracts for the new employees?",
+        goldenRule: "Auxiliar con 'You': Con el pronombre 'You' (tú / usted / ustedes), la pregunta en presente simple SIEMPRE inicia con 'Do'. 'Does' solo se usa con 'He, She, It'.",
+        spanishTranslation: "¿Tienes los contratos firmados para los nuevos empleados?",
+        teacherTip: "Fórmula fija de oficina: 'Do you have...?' es la pregunta laboral de verificación más usada en Recursos Humanos."
+      },
+      {
+        id: 9,
+        category: "Verb To Be • Future",
+        department: "🌟 GTH SAS Community (Comunidad GTH SAS)",
+        protagonist: "Los 27 Aprendices de Gestión de TH",
+        sentence: "We will be certified Human Resources professionals next semester.",
+        hasError: false,
+        faultyTokenIndex: -1,
+        faultyWord: null,
+        correctWord: null,
+        correctSentence: "We will be certified Human Resources professionals next semester.",
+        goldenRule: "¡Oración Impecable! Estructura de futuro perfecta: Sujeto ('We') + will be + complemento profesional. Todos los pronombres usan 'will be'.",
+        spanishTranslation: "Nosotros seremos profesionales certificados de Talento Humano el próximo semestre.",
+        teacherTip: "Oración motivacional de clase. Pídeles que la lean todos al unísono para ganar confianza y fluidez."
+      },
+      {
+        id: 10,
+        category: "Do vs Does",
+        department: "💰 Financial Direction (Dirección Financiera)",
+        protagonist: "Alexander José Gutiérrez (CFO • Director Financiero)",
+        sentence: "Do Alexander prepare the financial budget for next month?",
+        hasError: true,
+        faultyTokenIndex: 0, // "Do"
+        faultyWord: "Do",
+        correctWord: "Does",
+        correctSentence: "Does Alexander prepare the financial budget for next month?",
+        goldenRule: "Auxiliar en Tercera Persona Singular: Alexander es un hombre en singular (He / Él). Las preguntas en presente simple con 'He' obligatoriamente inician con 'Does'.",
+        spanishTranslation: "¿Prepara Alexander el presupuesto financiero para el próximo mes?",
+        teacherTip: "Estrategia pedagógica: Reemplaza el nombre propio por su pronombre equivalente (Alexander = He -> Does he?)."
+      },
+      {
+        id: 11,
+        category: "Verb To Be • Present",
+        department: "⚙️ ICT & Quality (TICS y Calidad)",
+        protagonist: "Daniel Duque (TICS) & Salomé Guzmán (Calidad)",
+        sentence: "Daniel and Salomé am assistants in the operations area.",
+        hasError: true,
+        faultyTokenIndex: 3, // "am"
+        faultyWord: "am",
+        correctWord: "are",
+        correctSentence: "Daniel and Salomé are assistants in the operations area.",
+        goldenRule: "Sujeto Compuesto Plural: Al unir dos nombres con 'and', forman 'They' (Ellos). En presente simple, el plural de To Be es 'are'. 'Am' es exclusivo de 'I'.",
+        spanishTranslation: "Daniel y Salomé son auxiliares en el área de operaciones.",
+        teacherTip: "Cuidado con la trampa de proximidad: no miren solo el último nombre ('Salomé'); miren la suma total de personas."
+      },
+      {
+        id: 12,
+        category: "Do vs Does",
+        department: "📞 Customer Service & Sales (Atención al Cliente y Ventas)",
+        protagonist: "Yuliana Gómez & Jessica Lavado",
+        sentence: "The candidates do not wait in the reception area after the interview.",
+        hasError: false,
+        faultyTokenIndex: -1,
+        faultyWord: null,
+        correctWord: null,
+        correctSentence: "The candidates do not wait in the reception area after the interview.",
+        goldenRule: "¡Oración Impecable! 'The candidates' es un sujeto plural (They). Por lo tanto, la negación en presente simple es 'do not' seguida del verbo base 'wait'.",
+        spanishTranslation: "Los candidatos no esperan en la zona de recepción después de la entrevista.",
+        teacherTip: "Explica que 'do not' es el estilo formal recomendado en manuales de políticas y cartas de recursos humanos."
+      },
+      {
+        id: 13,
+        category: "Do vs Does",
+        department: "💼 Payroll Area (Área de Nómina)",
+        protagonist: "Kelly Yuliana & Laura Vanessa",
+        sentence: "Does the payroll assistants calculate overtime on Fridays?",
+        hasError: true,
+        faultyTokenIndex: 0,
+        faultyWord: "Does",
+        correctWord: "Do",
+        correctSentence: "Do the payroll assistants calculate overtime on Fridays?",
+        goldenRule: "Auxiliar con Sujeto Plural: 'the payroll assistants' está en plural (They / Ellas). Por eso la pregunta debe iniciar con 'Do', nunca con 'Does'.",
+        spanishTranslation: "¿Calculan las asistentes de nómina las horas extras los viernes?",
+        teacherTip: "Pide a los aprendices identificar la 's' al final de 'assistants' para reconocer que es plural."
+      },
+      {
+        id: 14,
+        category: "Verb To Be • Past",
+        department: "🛡️ Occupational Health & Safety • OHS (SST)",
+        protagonist: "Estefanía Arboleda & Emilly Kercuelen",
+        sentence: "Estefanía and Emilly were at the safety inspection yesterday.",
+        hasError: false,
+        faultyTokenIndex: -1,
+        faultyWord: null,
+        correctWord: null,
+        correctSentence: "Estefanía and Emilly were at the safety inspection yesterday.",
+        goldenRule: "¡Oración Impecable! Dos personas ('Estefanía and Emilly' = They) en pasado simple siempre usan 'were'.",
+        spanishTranslation: "Estefanía y Emilly estuvieron en la inspección de seguridad ayer.",
+        teacherTip: "Refuerza que 'were' también significa 'estuvieron', no solo 'eran'."
+      },
+      {
+        id: 15,
+        category: "Do vs Does",
+        department: "💻 Tech & Internal Marketing (Tecnología y Mkt)",
+        protagonist: "Jairo Andrés Ramírez",
+        sentence: "He do not send the onboarding emails on Mondays.",
+        hasError: true,
+        faultyTokenIndex: 1,
+        faultyWord: "do",
+        correctWord: "does",
+        correctSentence: "He does not send the onboarding emails on Mondays.",
+        goldenRule: "Negación con 'He': En tercera persona singular ('He, She, It'), la negación en presente simple siempre usa 'does not' (o 'doesn\'t').",
+        spanishTranslation: "Él no envía los correos de bienvenida los lunes.",
+        teacherTip: "Recuerda que con He/She/It el auxiliar siempre cambia a 'does' tanto en pregunta como en negación."
+      },
+      {
+        id: 16,
+        category: "Verb To Be • Future",
+        department: "🤝 Induction & Selection (Inducción y Selección)",
+        protagonist: "New Employees",
+        sentence: "Tomorrow, the new employees will are in the induction room.",
+        hasError: true,
+        faultyTokenIndex: 5,
+        faultyWord: "are",
+        correctWord: "be",
+        correctSentence: "Tomorrow, the new employees will be in the induction room.",
+        goldenRule: "Futuro con 'Will': Después del auxiliar modal 'will', el verbo To Be nunca se conjuga como 'am/is/are'; siempre va en su forma base 'be'.",
+        spanishTranslation: "Mañana, los nuevos empleados estarán en la sala de inducción.",
+        teacherTip: "Enfatiza que 'will be' funciona igual para singular y plural."
+      },
+      {
+        id: 17,
+        category: "Do vs Does",
+        department: "⚙️ ICT & Quality (TICS y Calidad)",
+        protagonist: "Salomé Guzmán (QA Assistant)",
+        sentence: "Does the Quality Assurance assistant check every document?",
+        hasError: false,
+        faultyTokenIndex: -1,
+        faultyWord: null,
+        correctWord: null,
+        correctSentence: "Does the Quality Assurance assistant check every document?",
+        goldenRule: "¡Oración Impecable! El sujeto 'the Quality Assurance assistant' es singular (She/He), usa 'Does' al inicio y el verbo 'check' queda en forma base.",
+        spanishTranslation: "¿Revisa la auxiliar de Calidad cada documento?",
+        teacherTip: "Buen ejercicio para practicar vocabulario técnico: Quality Assurance (Aseguramiento de Calidad)."
+      },
+      {
+        id: 18,
+        category: "Verb To Be • Present",
+        department: "🌱 Training & Well-being (Capacitación y Bienestar)",
+        protagonist: "Heidy Carolina Villamizar",
+        sentence: "I is very happy to work in the Human Resources team.",
+        hasError: true,
+        faultyTokenIndex: 1,
+        faultyWord: "is",
+        correctWord: "am",
+        correctSentence: "I am very happy to work in the Human Resources team.",
+        goldenRule: "Primera Persona en Presente: El pronombre 'I' (Yo) tiene su propia forma exclusiva en presente simple: 'I am'. Nunca se usa 'I is'.",
+        spanishTranslation: "Estoy muy feliz de trabajar en el equipo de Talento Humano.",
+        teacherTip: "Error clásico por interferencia; recuérdales que 'am' es exclusivo para 'I'."
+      },
+      {
+        id: 19,
+        category: "Do vs Does",
+        department: "💰 Financial Direction (Dirección Financiera)",
+        protagonist: "Juan Sánchez & Luisa María",
+        sentence: "Why does Juan and Luisa arrive early to the finance meeting?",
+        hasError: true,
+        faultyTokenIndex: 1,
+        faultyWord: "does",
+        correctWord: "do",
+        correctSentence: "Why do Juan and Luisa arrive early to the finance meeting?",
+        goldenRule: "Pregunta con WH + Sujeto Plural: 'Juan and Luisa' son dos personas (They). Por lo tanto, después de 'Why' el auxiliar correcto es 'do'.",
+        spanishTranslation: "¿Por qué llegan temprano Juan y Luisa a la reunión financiera?",
+        teacherTip: "La palabra 'Why' no cambia la regla del auxiliar: sigue dependiendo de si el sujeto es singular o plural."
+      },
+      {
+        id: 20,
+        category: "Verb To Be • Future",
+        department: "🌟 GTH SAS Community (Comunidad GTH SAS)",
+        protagonist: "GTH SAS",
+        sentence: "Next year, GTH SAS will be a leading training company.",
+        hasError: false,
+        faultyTokenIndex: -1,
+        faultyWord: null,
+        correctWord: null,
+        correctSentence: "Next year, GTH SAS will be a leading training company.",
+        goldenRule: "¡Oración Impecable! 'GTH SAS' es una empresa (It) y en futuro simple usa la estructura correcta 'will be'.",
+        spanishTranslation: "El próximo año, GTH SAS será una empresa líder en formación.",
+        teacherTip: "Cierre motivador para el grupo usando el nombre de su empresa formativa."
+      }
+    ];
+
+    // App State
+    let currentSlideIndex = 0;
+    let filteredIndices = sentencesData.map((_, i) => i);
+    let userAnswers = {}; // { slideId: { answered: bool, isCorrectGuess: bool, userChoice: 'error' | 'correct' } }
+    let score = 0;
+    let correctCount = 0;
+    let incorrectCount = 0;
+    let currentStreak = 0;
+    let soundEnabled = true;
+    let teacherNotesVisible = false;
+    let currentFilter = 'all';
+
+    // Student Name State
+    let studentFullName = '';
+
+    // Web Audio Synthesizer (iOS Safari safe lazy initialization & resume)
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      return audioCtx;
+    }
+
+    function playTone(freq, type, duration, delay = 0) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        setTimeout(() => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + duration);
+        }, delay);
+      } catch (e) {
+        console.warn("Audio Context error", e);
+      }
+    }
+
+    function playSuccessSound() {
+      if (!soundEnabled) return;
+      playTone(523.25, 'triangle', 0.2, 0);   // C5
+      playTone(659.25, 'triangle', 0.2, 80);  // E5
+      playTone(783.99, 'triangle', 0.3, 160); // G5
+      playTone(1046.50, 'triangle', 0.4, 240); // C6
+    }
+
+    function playErrorSound() {
+      if (!soundEnabled) return;
+      playTone(330, 'sawtooth', 0.2, 0);
+      playTone(293.66, 'sawtooth', 0.35, 120);
+    }
+
+    function playClickSound() {
+      if (!soundEnabled) return;
+      playTone(800, 'sine', 0.05, 0);
+    }
+
+    // Web Speech API with Advanced Natural/Neural Voice Selection
+    let cachedVoices = [];
+    let selectedVoiceName = '';
+    let speechRate = 0.92; // 0.92 is optimal natural cadence; 0.75 for slow mode
+
+    // Restore saved voice preference if available
+    try {
+      selectedVoiceName = localStorage.getItem('gth_preferred_voice') || '';
+    } catch(e) {}
+
+    function scoreVoice(v) {
+      let s = 0;
+      const name = (v.name || '').toLowerCase();
+      const lang = (v.lang || '').toLowerCase();
+      
+      // Strict English filter
+      if (!lang.startsWith('en')) return -1000;
+
+      // Online Neural & Natural voices have highest fidelity
+      if (!v.localService) s += 150;
+      if (name.includes('natural') || name.includes('neural')) s += 140;
+      if (name.includes('online')) s += 80;
+
+      // Top tier vendor neural voices
+      if (name.includes('jenny') || name.includes('aria') || name.includes('guy') || name.includes('ava') || name.includes('sara') || name.includes('ana')) s += 100;
+      if (name.includes('google us english') || name.includes('google uk english female')) s += 90;
+      if (name.includes('samantha') || name.includes('siri') || name.includes('karen') || name.includes('daniel') || name.includes('oliver')) s += 70;
+      if (name.includes('enhanced') || name.includes('premium')) s += 60;
+      
+      // Prefer US and UK accents for standard A2 learning
+      if (lang === 'en-us') s += 25;
+      if (lang === 'en-gb') s += 20;
+
+      // Heavily penalize legacy robotic/synthesized voice fonts
+      if (name.includes('david') || name.includes('zira') || name.includes('mark') || name.includes('hazel') || name.includes('george')) s -= 80;
+      if (name.includes('espeak') || name.includes('compact') || name.includes('desktop') || name.includes('klatt')) s -= 200;
+      return s;
+    }
+
+    function populateVoiceSelect() {
+      const sel = document.getElementById('voice-select');
+      if (!sel || !('speechSynthesis' in window)) return;
+      
+      cachedVoices = window.speechSynthesis.getVoices();
+      const enVoices = cachedVoices
+        .filter(v => v.lang && v.lang.toLowerCase().startsWith('en') && scoreVoice(v) > -500)
+        .sort((a, b) => scoreVoice(b) - scoreVoice(a));
+
+      if (!enVoices.length) return;
+      sel.innerHTML = '';
+      
+      enVoices.forEach((v, i) => {
+        const opt = document.createElement('option');
+        opt.value = v.name;
+        const isNeural = scoreVoice(v) >= 100;
+        let cleanName = v.name.replace(/Microsoft |Google |Apple |Online \(Natural\) - |English \(United States\)|English \(United Kingdom\)/gi, '').trim();
+        cleanName = cleanName.replace(/\s+/g, ' ').slice(0, 22);
+        opt.textContent = (isNeural ? '✨ ' : (i === 0 ? '★ ' : '')) + cleanName + (v.lang === 'en-GB' ? ' (UK)' : ' (US)');
+        sel.appendChild(opt);
+      });
+
+      // Match saved or auto-select top rated voice
+      if (selectedVoiceName && enVoices.some(v => v.name === selectedVoiceName)) {
+        sel.value = selectedVoiceName;
+      } else {
+        selectedVoiceName = enVoices[0].name;
+        sel.value = selectedVoiceName;
+      }
+    }
+
+    // Proactively poll for voices on load (browsers load voices asynchronously)
+    if ('speechSynthesis' in window) {
+      populateVoiceSelect();
+      window.speechSynthesis.onvoiceschanged = populateVoiceSelect;
+      let voicePollCount = 0;
+      const voiceInterval = setInterval(() => {
+        voicePollCount++;
+        if (cachedVoices.length > 0 || voicePollCount > 25) {
+          clearInterval(voiceInterval);
+          populateVoiceSelect();
+        } else {
+          cachedVoices = window.speechSynthesis.getVoices();
+          if (cachedVoices.length > 0) {
+            clearInterval(voiceInterval);
+            populateVoiceSelect();
+          }
+        }
+      }, 150);
+    }
+
+    function getBestEnglishVoice() {
+      if (!cachedVoices.length && 'speechSynthesis' in window) {
+        cachedVoices = window.speechSynthesis.getVoices();
+      }
+      if (selectedVoiceName) {
+        const chosen = cachedVoices.find(v => v.name === selectedVoiceName);
+        if (chosen) return chosen;
+      }
+      const enVoices = cachedVoices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en') && scoreVoice(v) > -500);
+      if (!enVoices.length) return null;
+      enVoices.sort((a, b) => scoreVoice(b) - scoreVoice(a));
+      return enVoices[0];
+    }
+
+    function speakText(text, customRate = null) {
+      if (!('speechSynthesis' in window)) {
+        showToast("Speech synthesis not supported on this browser.", "⚠️");
+        return;
+      }
+      window.speechSynthesis.cancel();
+
+      // Clean punctuation for natural prosody
+      const cleanText = text.replace(/\s+/g, ' ').trim();
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      const bestVoice = getBestEnglishVoice();
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+        utterance.lang = bestVoice.lang;
+      } else {
+        utterance.lang = 'en-US';
+      }
+
+      utterance.rate = customRate !== null ? customRate : speechRate;
+      utterance.pitch = 1.0;
+      
+      // Voice feedback toast displaying active voice name
+      const voiceLabel = bestVoice ? bestVoice.name.replace(/Microsoft |Google |Online \(Natural\) - /gi, '').slice(0, 18) : 'Default';
+      showToast(`Playing audio (${utterance.rate}x • ${voiceLabel})`, "🔊");
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function showToast(message, icon = "✨") {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-icon').textContent = icon;
+      document.getElementById('toast-message').textContent = message;
+      toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      }, 2500);
+    }
+
+    // Render Slide
+    function renderSlide(indexInFiltered) {
+      const actualSlideIndex = filteredIndices[indexInFiltered];
+      const data = sentencesData[actualSlideIndex];
+
+      // Update counters & headers
+      document.getElementById('slide-indicator').textContent = `Sentence ${indexInFiltered + 1} of ${filteredIndices.length}`;
+      const progressPercent = ((indexInFiltered + 1) / filteredIndices.length) * 100;
+      document.getElementById('progress-bar-fill').style.width = `${progressPercent}%`;
+
+      // Meta Badges
+      document.getElementById('badge-category').textContent = data.category;
+      document.getElementById('badge-dept').textContent = data.department;
+      document.getElementById('spanish-hint').textContent = `Traducción: "${data.spanishTranslation}"`;
+
+      // Render Sentence Words as interactive tokens
+      const words = data.sentence.split(' ');
+      const sentenceContainer = document.getElementById('sentence-container');
+      sentenceContainer.innerHTML = '';
+
+      words.forEach((word, idx) => {
+        const span = document.createElement('span');
+        span.className = 'token-word';
+        span.textContent = word;
+        span.dataset.index = idx;
+        
+        span.addEventListener('click', () => {
+          if (userAnswers[data.id]?.answered) return;
+          playClickSound();
+          // If student clicks on the faulty word directly, highlight it!
+          if (data.hasError && idx === data.faultyTokenIndex) {
+            handleAnswer('error', true); // direct hit!
+          } else if (data.hasError) {
+            showToast(`¡Casi! "${word}" no es el error principal. Revisa bien la oración.`, "🔍");
+          } else {
+            showToast(`"${word}" está perfectamente usado aquí.`, "👍");
+          }
+        });
+
+        sentenceContainer.appendChild(span);
+        // space
+        sentenceContainer.appendChild(document.createTextNode(' '));
+      });
+
+      // Prepare feedback elements
+      document.getElementById('golden-rule-text').textContent = data.goldenRule;
+      document.getElementById('teacher-note-text').textContent = data.teacherTip;
+      document.getElementById('corrected-sentence-preview').textContent = data.correctSentence;
+
+      // Check if already answered
+      const answerState = userAnswers[data.id];
+      const feedbackPanel = document.getElementById('feedback-panel');
+      const actionButtons = document.getElementById('action-buttons-container');
+
+      if (answerState?.answered) {
+        displayFeedback(data, answerState.userChoice, answerState.isCorrectGuess);
+      } else {
+        feedbackPanel.classList.add('hidden');
+        actionButtons.classList.remove('hidden');
+        resetWordStyling();
+      }
+
+      // Next button text
+      const isLast = (indexInFiltered === filteredIndices.length - 1);
+      document.getElementById('next-btn-text').textContent = isLast ? 'View Final Report' : 'Next Sentence';
+
+      // Prev button disabled on first
+      document.getElementById('btn-prev-slide').disabled = (indexInFiltered === 0);
+    }
+
+    function resetWordStyling() {
+      document.querySelectorAll('.token-word').forEach(el => {
+        el.className = 'token-word';
+      });
+    }
+
+    // Handle User Decision: 'error' or 'correct'
+    function handleAnswer(choice, directTokenHit = false) {
+      const data = sentencesData[filteredIndices[currentSlideIndex]];
+      if (userAnswers[data.id]?.answered) return;
+
+      const isActualError = data.hasError;
+      const userSaidError = (choice === 'error');
+      const isCorrectGuess = (isActualError === userSaidError);
+
+      if (isCorrectGuess) {
+        score += 10;
+        correctCount += 1;
+        currentStreak += 1;
+        playSuccessSound();
+      } else {
+        incorrectCount += 1;
+        currentStreak = 0;
+        playErrorSound();
+      }
+
+      userAnswers[data.id] = {
+        answered: true,
+        userChoice: choice,
+        isCorrectGuess: isCorrectGuess,
+        directTokenHit: directTokenHit
+      };
+
+      updateGlobalCounters();
+      displayFeedback(data, choice, isCorrectGuess);
+    }
+
+    function displayFeedback(data, choice, isCorrectGuess) {
+      const feedbackPanel = document.getElementById('feedback-panel');
+      const actionButtons = document.getElementById('action-buttons-container');
+      const banner = document.getElementById('feedback-banner');
+      const emoji = document.getElementById('feedback-emoji');
+      const title = document.getElementById('feedback-verdict-title');
+      const sub = document.getElementById('feedback-verdict-sub');
+      const badge = document.getElementById('feedback-points-badge');
+      const visualBreakdown = document.getElementById('visual-breakdown');
+
+      actionButtons.classList.add('hidden');
+      feedbackPanel.classList.remove('hidden');
+
+      if (isCorrectGuess) {
+        banner.className = 'p-4 rounded-xl flex items-center justify-between border bg-emerald-950/40 border-emerald-500/50 text-emerald-100 success-glow';
+        emoji.textContent = '🎉';
+        title.innerHTML = '¡Excelente Deducción de Detective! <span class="text-emerald-300 font-semibold text-sm block sm:inline">/ Great Detective Work!</span>';
+        sub.innerHTML = data.hasError 
+          ? 'Identificaste con precisión que la oración contenía un error gramatical. <span class="text-slate-400 italic block sm:inline">/ You accurately spotted the grammar error.</span>'
+          : '¡Exacto! Confirmaste que la oración cumple todas las normas de concordancia. <span class="text-slate-400 italic block sm:inline">/ Exactly! You confirmed the sentence is grammatically correct.</span>';
+        badge.className = 'px-3 py-1.5 rounded-lg font-mono font-bold text-sm bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        badge.textContent = '+10 pts';
+      } else {
+        banner.className = 'p-4 rounded-xl flex items-center justify-between border bg-rose-950/40 border-rose-500/50 text-rose-100 error-glow';
+        emoji.textContent = '🧐';
+        title.innerHTML = '¡Buen intento de observación! <span class="text-rose-300 font-semibold text-sm block sm:inline">/ Good observation attempt!</span>';
+        sub.innerHTML = data.hasError
+          ? 'En realidad la oración sí contenía un error. Revisa la corrección abajo. <span class="text-slate-400 italic block sm:inline">/ Actually, the sentence had an error. Check the correction below.</span>'
+          : 'En realidad la oración estaba totalmente correcta y bien formulada. <span class="text-slate-400 italic block sm:inline">/ Actually, the sentence was completely correct.</span>';
+        badge.className = 'px-3 py-1.5 rounded-lg font-mono font-bold text-sm bg-rose-500/20 text-rose-300 border border-rose-500/30';
+        badge.textContent = '+0 pts';
+      }
+
+      // Visual Breakdown in Sentence
+      if (data.hasError) {
+        visualBreakdown.innerHTML = `
+          <div class="flex flex-wrap items-center gap-2 text-rose-300">
+            <span class="font-bold">❌ Error encontrado / Error found:</span>
+            <span class="bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded font-mono font-bold line-through border border-rose-500/30">${data.faultyWord}</span>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 text-emerald-300">
+            <span class="font-bold">✅ Forma correcta / Correct form:</span>
+            <span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono font-bold border border-emerald-500/30">${data.correctWord}</span>
+          </div>
+        `;
+
+        // Highlight token inside the big sentence display
+        const tokens = document.querySelectorAll('#sentence-container .token-word');
+        if (tokens[data.faultyTokenIndex]) {
+          tokens[data.faultyTokenIndex].className = 'token-word bg-rose-600/40 text-rose-200 line-through border border-rose-500 font-bold px-2 py-0.5 rounded-md';
+        }
+      } else {
+        visualBreakdown.innerHTML = `
+          <div class="flex flex-wrap items-center gap-2 text-emerald-300">
+            <span class="font-bold">✅ Estructura 100% Correcta / 100% Correct Structure:</span>
+            <span>No requiere corrección gramatical / No correction needed.</span>
+          </div>
+        `;
+        document.querySelectorAll('#sentence-container .token-word').forEach(el => {
+          el.classList.add('text-emerald-300');
+        });
+      }
+    }
+
+    function updateGlobalCounters() {
+      document.getElementById('score-counter').textContent = `${score} / ${sentencesData.length * 10}`;
+      document.getElementById('correct-counter').textContent = correctCount;
+      document.getElementById('incorrect-counter').textContent = incorrectCount;
+      document.getElementById('streak-counter').textContent = currentStreak;
+    }
+
+    // Summary Screen Render
+    function renderSummary() {
+      document.getElementById('slide-card').classList.add('hidden');
+      document.getElementById('summary-card').classList.remove('hidden');
+
+      const finalScore = score;
+      const totalAttempted = Object.keys(userAnswers).length;
+      const accuracy = totalAttempted > 0 ? Math.round((correctCount / totalAttempted) * 100) : 0;
+
+      document.getElementById('summary-student-name').textContent = studentFullName || 'Guest Trainee';
+      document.getElementById('summary-final-score').textContent = `${finalScore} / ${sentencesData.length * 10}`;
+      document.getElementById('summary-accuracy').textContent = `${accuracy}%`;
+      document.getElementById('summary-correct').textContent = correctCount;
+      document.getElementById('summary-incorrect').textContent = incorrectCount;
+
+      // Badge logic
+      const icon = document.getElementById('summary-badge-icon');
+      const title = document.getElementById('summary-badge-title');
+      const desc = document.getElementById('summary-badge-desc');
+
+      if (accuracy >= 85) {
+        icon.textContent = '🥇';
+        title.textContent = 'Master Detective de Talento Humano (Nivel Oro)';
+        desc.textContent = '¡Dominio sobresaliente y precisión quirúrgica en Do/Does y el Verbo To Be!';
+      } else if (accuracy >= 65) {
+        icon.textContent = '🥈';
+        title.textContent = 'Investigador Avanzado de GTH SAS (Nivel Plata)';
+        desc.textContent = 'Buen desempeño con gran potencial. Solo faltan pulir detalles en terceras personas.';
+      } else {
+        icon.textContent = '🥉';
+        title.textContent = 'Detective en Entrenamiento (Nivel Bronce)';
+        desc.textContent = 'Recomendado repasar la regla del "ladrón de la S" y el pasado was/were.';
+      }
+
+      // Populate Table
+      const tbody = document.getElementById('summary-table-body');
+      tbody.innerHTML = '';
+
+      sentencesData.forEach((s, idx) => {
+        const ans = userAnswers[s.id];
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/60 transition';
+
+        let userBadge = '<span class="text-slate-500 italic">Sin responder</span>';
+        if (ans) {
+          userBadge = ans.isCorrectGuess 
+            ? '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">Acertó (+10)</span>'
+            : '<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30">Falló (0)</span>';
+        }
+
+        const stateBadge = s.hasError 
+          ? '<span class="px-2 py-0.5 rounded bg-rose-950/60 text-rose-300 border border-rose-800 font-semibold">Tiene Error</span>'
+          : '<span class="px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-800 font-semibold">Correcta</span>';
+
+        const correctionHtml = s.hasError 
+          ? `<span class="line-through text-rose-400 font-mono">${s.faultyWord}</span> → <span class="font-bold text-emerald-400 font-mono">${s.correctWord}</span>`
+          : `<span class="text-emerald-400 font-medium">✓ Impecable</span>`;
+
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-mono font-bold text-slate-400">${s.id}</td>
+          <td class="py-2.5 px-3 font-semibold text-blue-400 text-xs">${s.category}</td>
+          <td class="py-2.5 px-3 font-medium text-slate-200 max-w-xs truncate" title="${s.sentence}">${s.sentence}</td>
+          <td class="py-2.5 px-3 text-center">${stateBadge}</td>
+          <td class="py-2.5 px-3">${correctionHtml}</td>
+          <td class="py-2.5 px-3 text-center">${userBadge}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Drawer / Jumper
+    function populateDrawer() {
+      const container = document.getElementById('drawer-list');
+      container.innerHTML = '';
+
+      sentencesData.forEach((s, idx) => {
+        const item = document.createElement('div');
+        const ans = userAnswers[s.id];
+        let statusIcon = '⚪';
+        if (ans?.answered) {
+          statusIcon = ans.isCorrectGuess ? '✅' : '❌';
+        }
+
+        item.className = 'p-3 rounded-xl bg-slate-900/60 hover:bg-slate-700/60 border border-slate-700/80 cursor-pointer flex items-center justify-between transition';
+        item.innerHTML = `
+          <div class="flex items-center space-x-3">
+            <span class="font-mono font-bold text-slate-400 text-sm">#${s.id}</span>
+            <div>
+              <div class="text-xs font-bold text-blue-400 uppercase">${s.category}</div>
+              <div class="text-sm font-semibold text-slate-200 truncate max-w-sm">${s.sentence}</div>
+            </div>
+          </div>
+          <div class="text-base">${statusIcon}</div>
+        `;
+
+        item.addEventListener('click', () => {
+          playClickSound();
+          document.getElementById('drawer-modal').classList.add('hidden');
+          document.getElementById('summary-card').classList.add('hidden');
+          document.getElementById('slide-card').classList.remove('hidden');
+          
+          // switch to "all" filter if currently not in filtered
+          currentFilter = 'all';
+          updateFilterButtons();
+          filteredIndices = sentencesData.map((_, i) => i);
+          currentSlideIndex = idx;
+          renderSlide(currentSlideIndex);
+        });
+
+        container.appendChild(item);
+      });
+    }
+
+    function updateFilterButtons() {
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.className = 'filter-btn px-2.5 py-1 rounded-md font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition';
+      });
+      if (currentFilter === 'all') {
+        document.getElementById('filter-all').className = 'filter-btn px-2.5 py-1 rounded-md font-semibold bg-blue-600 text-white transition';
+      } else if (currentFilter === 'do-does') {
+        document.getElementById('filter-do-does').className = 'filter-btn px-2.5 py-1 rounded-md font-semibold bg-blue-600 text-white transition';
+      } else if (currentFilter === 'to-be') {
+        document.getElementById('filter-to-be').className = 'filter-btn px-2.5 py-1 rounded-md font-semibold bg-blue-600 text-white transition';
+      }
+    }
+
+    // EVENT LISTENERS INITIALIZATION
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // Welcome Screen / Start Activity Handler
+      const startBtn = document.getElementById('btn-start-activity');
+      const nameInput = document.getElementById('student-name-input');
+      const nameError = document.getElementById('name-error-msg');
+
+      function startSession() {
+        const val = nameInput.value.trim();
+        if (!val) {
+          nameError.classList.remove('hidden');
+          nameInput.focus();
+          return;
+        }
+        nameError.classList.add('hidden');
+        studentFullName = val;
+        document.getElementById('header-student-name').textContent = studentFullName;
+        document.getElementById('header-student-badge').classList.remove('hidden');
+        document.getElementById('welcome-card').classList.add('hidden');
+        document.getElementById('slide-card').classList.remove('hidden');
+        getAudioContext();
+        playClickSound();
+        renderSlide(currentSlideIndex);
+      }
+
+      startBtn.addEventListener('click', startSession);
+      nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') startSession();
+      });
+
+      // Initial Slide (pre-rendered behind welcome card)
+      renderSlide(currentSlideIndex);
+
+      // Decision Buttons
+      document.getElementById('btn-choose-error').addEventListener('click', () => {
+        playClickSound();
+        handleAnswer('error');
+      });
+
+      document.getElementById('btn-choose-correct').addEventListener('click', () => {
+        playClickSound();
+        handleAnswer('correct');
+      });
+
+      // Navigation
+      document.getElementById('btn-next-slide').addEventListener('click', () => {
+        playClickSound();
+        if (currentSlideIndex < filteredIndices.length - 1) {
+          currentSlideIndex++;
+          renderSlide(currentSlideIndex);
+        } else {
+          renderSummary();
+        }
+      });
+
+      document.getElementById('btn-prev-slide').addEventListener('click', () => {
+        playClickSound();
+        if (currentSlideIndex > 0) {
+          currentSlideIndex--;
+          renderSlide(currentSlideIndex);
+        }
+      });
+
+      document.getElementById('btn-reset-current').addEventListener('click', () => {
+        playClickSound();
+        const data = sentencesData[filteredIndices[currentSlideIndex]];
+        if (userAnswers[data.id]) {
+          if (userAnswers[data.id].isCorrectGuess) {
+            score = Math.max(0, score - 10);
+            correctCount = Math.max(0, correctCount - 1);
+          } else {
+            incorrectCount = Math.max(0, incorrectCount - 1);
+          }
+          delete userAnswers[data.id];
+          updateGlobalCounters();
+          renderSlide(currentSlideIndex);
+          showToast("Oración reiniciada para nuevo intento.", "🔄");
+        }
+      });
+
+      // Audio buttons
+      document.getElementById('btn-speak-sentence').addEventListener('click', () => {
+        const data = sentencesData[filteredIndices[currentSlideIndex]];
+        speakText(data.sentence);
+      });
+
+      document.getElementById('btn-speak-corrected').addEventListener('click', () => {
+        const data = sentencesData[filteredIndices[currentSlideIndex]];
+        speakText(data.correctSentence);
+      });
+
+      // Voice selector
+      const voiceSel = document.getElementById('voice-select');
+      if (voiceSel) {
+        voiceSel.addEventListener('change', (e) => {
+          selectedVoiceName = e.target.value;
+          try { localStorage.setItem('gth_preferred_voice', selectedVoiceName); } catch(err){}
+          const data = sentencesData[filteredIndices[currentSlideIndex]];
+          speakText(data.sentence);
+        });
+      }
+
+      // Audio Speed Toggle (1.0x normal vs 0.75x slow for A2 practice)
+      const speedBtn = document.getElementById('btn-speed-toggle');
+      if (speedBtn) {
+        speedBtn.addEventListener('click', () => {
+          if (speechRate > 0.8) {
+            speechRate = 0.75;
+            document.getElementById('speed-label').textContent = '0.75x (Lento)';
+            showToast("Velocidad lenta para práctica A2 (0.75x)", "🐢");
+          } else {
+            speechRate = 0.92;
+            document.getElementById('speed-label').textContent = '1.0x';
+            showToast("Velocidad normal conversacional (1.0x)", "⚡");
+          }
+          const data = sentencesData[filteredIndices[currentSlideIndex]];
+          speakText(data.sentence);
+        });
+      }
+
+      // Sound toggle
+      document.getElementById('btn-sound').addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        document.getElementById('sound-icon').textContent = soundEnabled ? '🔔' : '🔕';
+        showToast(soundEnabled ? "Efectos de sonido activados" : "Sonido silenciado", soundEnabled ? "🔔" : "🔕");
+      });
+
+      // Teacher Notes toggle
+      document.getElementById('btn-teacher-notes').addEventListener('click', () => {
+        teacherNotesVisible = !teacherNotesVisible;
+        const card = document.getElementById('teacher-note-card');
+        if (teacherNotesVisible) {
+          card.classList.remove('hidden');
+          showToast("Tips pedagógicos para el docente activados", "💡");
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+
+      // Fullscreen Mode (iOS Safari safe)
+      document.getElementById('btn-fullscreen').addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().then(() => {
+              document.getElementById('fullscreen-icon').textContent = '✖';
+              showToast("Fullscreen mode enabled", "⛶");
+            }).catch(() => {
+              showToast("Fullscreen not supported on this device", "ℹ️");
+            });
+          } else {
+            showToast("Fullscreen not supported on this device", "ℹ️");
+          }
+        } else if (document.exitFullscreen) {
+          document.exitFullscreen();
+          document.getElementById('fullscreen-icon').textContent = '⛶';
+        }
+      });
+
+      // Drawer Modal
+      document.getElementById('btn-drawer').addEventListener('click', () => {
+        populateDrawer();
+        document.getElementById('drawer-modal').classList.remove('hidden');
+      });
+      document.getElementById('btn-close-drawer').addEventListener('click', () => {
+        document.getElementById('drawer-modal').classList.add('hidden');
+      });
+      document.getElementById('btn-view-summary-direct').addEventListener('click', () => {
+        document.getElementById('drawer-modal').classList.add('hidden');
+        renderSummary();
+      });
+
+      // Summary Return & Reset
+      document.getElementById('btn-return-slides').addEventListener('click', () => {
+        document.getElementById('summary-card').classList.add('hidden');
+        document.getElementById('slide-card').classList.remove('hidden');
+        renderSlide(currentSlideIndex);
+      });
+
+      document.getElementById('btn-restart-all').addEventListener('click', () => {
+        userAnswers = {};
+        score = 0;
+        correctCount = 0;
+        incorrectCount = 0;
+        currentStreak = 0;
+        currentSlideIndex = 0;
+        updateGlobalCounters();
+        document.getElementById('summary-card').classList.add('hidden');
+        document.getElementById('slide-card').classList.remove('hidden');
+        renderSlide(currentSlideIndex);
+        showToast("Dinámica reiniciada con éxito.", "🚀");
+      });
+
+      document.getElementById('btn-print-report').addEventListener('click', () => {
+        window.print();
+      });
+
+      // Filter Handlers
+      document.getElementById('filter-all').addEventListener('click', () => {
+        currentFilter = 'all';
+        filteredIndices = sentencesData.map((_, i) => i);
+        currentSlideIndex = 0;
+        updateFilterButtons();
+        renderSlide(currentSlideIndex);
+      });
+
+      document.getElementById('filter-do-does').addEventListener('click', () => {
+        currentFilter = 'do-does';
+        filteredIndices = sentencesData.map((s, i) => s.category.includes("Do vs Does") ? i : -1).filter(i => i !== -1);
+        currentSlideIndex = 0;
+        updateFilterButtons();
+        renderSlide(currentSlideIndex);
+      });
+
+      document.getElementById('filter-to-be').addEventListener('click', () => {
+        currentFilter = 'to-be';
+        filteredIndices = sentencesData.map((s, i) => s.category.includes("To Be") ? i : -1).filter(i => i !== -1);
+        currentSlideIndex = 0;
+        updateFilterButtons();
+        renderSlide(currentSlideIndex);
+      });
+
+      // Keyboard navigation
+      document.addEventListener('keydown', (e) => {
+        if (document.getElementById('drawer-modal').classList.contains('hidden') && document.getElementById('welcome-card').classList.contains('hidden')) {
+          if (e.key === 'ArrowRight' || e.key === ' ') {
+            if (!document.getElementById('summary-card').classList.contains('hidden')) return;
+            if (currentSlideIndex < filteredIndices.length - 1) {
+              currentSlideIndex++;
+              renderSlide(currentSlideIndex);
+            } else {
+              renderSummary();
+            }
+          } else if (e.key === 'ArrowLeft') {
+            if (!document.getElementById('summary-card').classList.contains('hidden')) return;
+            if (currentSlideIndex > 0) {
+              currentSlideIndex--;
+              renderSlide(currentSlideIndex);
+            }
+          } else if (e.key === '1') {
+            handleAnswer('error');
+          } else if (e.key === '2') {
+            handleAnswer('correct');
+          } else if (e.key.toLowerCase() === 's') {
+            const data = sentencesData[filteredIndices[currentSlideIndex]];
+            speakText(data.sentence);
+          }
+        }
+      });
+
+    });
+  </script>
+</body>
+</html>
